@@ -6,37 +6,67 @@ import com.agencia.model.Hotel;
 import com.agencia.model.Reserva;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList; 
+import java.util.List;
 
 public class ServicioReservas {
 
-    private final Map<String, Hotel> hoteles = new HashMap<>();
-    private final Map<String, Cliente> clientes = new HashMap<>();
+    // Cambiamos los HashMap por ArrayList
+    private final List<Hotel> hoteles = new ArrayList<>();
+    private final List<Cliente> clientes = new ArrayList<>();
 
-    public boolean registerHotel(String id, String nombre) {
-        if (hoteles.containsKey(id.toUpperCase())) {
-            return false; // ID ya existe
-        }
-        hoteles.put(id.toUpperCase(), new Hotel(id, nombre));
-        return true;
-    }
-
-    public boolean registerCliente(String id, String nombre) {
-        if (clientes.containsKey(id.toUpperCase())) {
-            return false; // ID ya existe
-        }
-        clientes.put(id.toUpperCase(), new Cliente(id, nombre));
-        return true;
-    }
-
+    /**
+     * Busca un hotel por su ID. Ahora recorre la lista.
+     * @param id El ID del hotel a buscar.
+     * @return El objeto Hotel si se encuentra, o null si no.
+     */
     public Hotel findHotelById(String id) {
-        return hoteles.get(id.toUpperCase());
+        for (Hotel hotel : hoteles) {
+            // Usamos equalsIgnoreCase para una búsqueda más flexible (ej. "H1" == "h1")
+            if (hotel.getIdHotel().equalsIgnoreCase(id)) {
+                return hotel;
+            }
+        }
+        return null; // No se encontró el hotel
     }
 
+    /**
+     * Busca un cliente por su ID. Ahora recorre la lista.
+     * @param id El ID del cliente a buscar.
+     * @return El objeto Cliente si se encuentra, o null si no.
+     */
     public Cliente findClienteById(String id) {
-        return clientes.get(id.toUpperCase());
+        for (Cliente cliente : clientes) {
+            if (cliente.getIdCliente().equalsIgnoreCase(id)) {
+                return cliente;
+            }
+        }
+        return null; // No se encontró el cliente
+    }
+
+    /**
+     * Registra un nuevo hotel, verificando primero que el ID no exista.
+     * @return true si el registro fue exitoso, false si el ID ya existía.
+     */
+    public boolean registerHotel(String id, String nombre) {
+        // Verificamos si ya existe un hotel con ese ID antes de agregarlo
+        if (findHotelById(id) != null) {
+            return false; // Error: ID ya existe
+        }
+        hoteles.add(new Hotel(id, nombre));
+        return true;
+    }
+
+    /**
+     * Registra un nuevo cliente, verificando primero que el ID no exista.
+     * @return true si el registro fue exitoso, false si el ID ya existía.
+     */
+    public boolean registerCliente(String id, String nombre) {
+        if (findClienteById(id) != null) {
+            return false; // Error: ID ya existe
+        }
+        clientes.add(new Cliente(id, nombre));
+        return true;
     }
 
     public boolean addHabitacionToHotel(String idHotel, String numHabitacion, int precio) {
@@ -70,20 +100,37 @@ public class ServicioReservas {
         return "RESERVA_CREADA_EXITOSAMENTE";
     }
     
-    public boolean releaseHabitacion(String idHotel, String numHabitacion) {
+    public boolean releaseHabitacion(String idCliente, String idHotel, String numHabitacion) {
         Hotel hotel = findHotelById(idHotel);
-        if (hotel != null) {
-            Habitacion habitacion = hotel.buscarHabitacion(numHabitacion);
-            if (habitacion != null && !habitacion.isDisponible()) {
-                habitacion.setDisponible(true);
-                // Opcional: remover la reserva de la lista del cliente si es necesario
-                return true;
+        if (hotel == null) return false;
+
+        Habitacion habitacion = hotel.buscarHabitacion(numHabitacion);
+        if (habitacion == null || habitacion.isDisponible()) return false;
+        
+        Cliente cliente = findClienteById(idCliente);
+        if (cliente == null) return false;
+
+        // Buscar y eliminar la reserva específica
+        Reserva reservaAEliminar = null;
+        for (Reserva reserva : cliente.getReservas()) {
+            if (reserva.getHotel().getIdHotel().equalsIgnoreCase(idHotel) &&
+                reserva.getHabitacion().getNumeroHabitacion().equals(numHabitacion)) {
+                reservaAEliminar = reserva;
+                break;
             }
         }
-        return false;
+
+        if (reservaAEliminar != null) {
+            cliente.getReservas().remove(reservaAEliminar);
+            habitacion.setDisponible(true);
+            return true;
+        }
+
+        return false; // No se encontró una reserva que coincida para ese cliente
     }
 
-    public Map<String, Hotel> getHoteles() {
+    // El método ahora devuelve una List en lugar de un Map
+    public List<Hotel> getHoteles() {
         return hoteles;
     }
 

@@ -11,6 +11,24 @@ import java.util.Scanner;
 
 public class GestionReservas {
 
+    // --- Explicación de 'static final' para principiantes ---
+    //
+    // Usamos 'static' y 'final' para nuestras variables principales por dos razones muy importantes:
+    //
+    // 1. 'static': Esta palabra clave significa que la variable pertenece a la CLASE 'GestionReservas' en su conjunto,
+    //    y no a una instancia particular de ella. En términos simples, asegura que solo exista UNA ÚNICA COPIA
+    //    de 'servicio' y UNA ÚNICA COPIA de 'scanner' para toda nuestra aplicación.
+    //    - Para 'servicio': Es crucial tener un único servicio que maneje todos nuestros datos (hoteles, clientes).
+    //      Si creáramos un nuevo servicio cada vez, perderíamos toda la información guardada.
+    //    - Para 'scanner': Abrir múltiples 'scanners' para leer de la consola puede causar problemas y es ineficiente.
+    //      Con 'static', nos aseguramos de usar siempre el mismo para leer la entrada del usuario.
+    //
+    // 2. 'final': Esta palabra clave convierte la variable en una CONSTANTE. Una vez que le asignamos un valor
+    //    (aquí mismo, al declararla), no podemos volver a asignarle un valor diferente en ningún otro lugar del código.
+    //    Esto nos protege de errores accidentales, como que en alguna parte del programa se intente hacer
+    //    'servicio = new ServicioReservas();' de nuevo, lo que borraría todos nuestros datos.
+    //
+    // En resumen: 'static final' nos da una única instancia compartida y constante de estos recursos importantes.
     private static final ServicioReservas servicio = new ServicioReservas();
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -112,7 +130,7 @@ public class GestionReservas {
         if (hoteles.isEmpty()) {
             System.out.println("No hay hoteles registrados.");
         } else {
-            hoteles.values().forEach(System.out::println);
+            hoteles.forEach(System.out::println);
         }
     }
 
@@ -168,14 +186,17 @@ public class GestionReservas {
     }
 
     private static void releaseHabitacion() {
+        System.out.print("Ingrese ID del cliente que libera la habitación: ");
+        String idCliente = scanner.nextLine();
         System.out.print("Ingrese ID del hotel: ");
         String idHotel = scanner.nextLine();
         System.out.print("Ingrese número de habitación a liberar: ");
         String numHabitacion = scanner.nextLine();
-        if (servicio.releaseHabitacion(idHotel, numHabitacion)) {
-            System.out.println("¡Habitación liberada exitosamente!");
+        
+        if (servicio.releaseHabitacion(idCliente, idHotel, numHabitacion)) {
+            System.out.println("¡Habitación liberada y reserva eliminada exitosamente!");
         } else {
-            System.out.println("Error: No se pudo liberar la habitación. Verifique los datos o el estado de la habitación.");
+            System.out.println("Error: No se pudo liberar la habitación. Verifique los datos (cliente, hotel, habitación) o el estado de la habitación.");
         }
     }
 }
